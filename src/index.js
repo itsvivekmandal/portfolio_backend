@@ -1,7 +1,8 @@
 // Import required modules
 const express = require('express');
 const dotenv = require('dotenv');
-const userRoutes = require('../src/routes/user');
+const publicRoutes = require('../src/routes/publicRoutes');
+const privateRoutes = require('../src/routes/privateRoutes');
 const connectDB = require('../src/config/db');
 const {checkDBConnection} = require('../src/middleware/dbConnectionCheck');
 // Configure the env file
@@ -20,11 +21,12 @@ connectDB();
 app.use(checkDBConnection);
 
 // Route handling (after ensuring the database is connected)
-app.use('/portfolio', userRoutes);
+app.use('/', publicRoutes);
+app.use('/blog', privateRoutes);
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
+// app.get('/', (req, res) => {
+//   res.send('Hello World!');
+// });
 
 
 app.listen(port, () => {
