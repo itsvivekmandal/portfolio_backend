@@ -5,6 +5,8 @@ const publicRoutes = require('../src/routes/publicRoutes');
 const privateRoutes = require('../src/routes/privateRoutes');
 const connectDB = require('../src/config/db');
 const {checkDBConnection} = require('../src/middleware/dbConnectionCheck');
+const auth = require('../src/middleware/auth');
+
 // Configure the env file
 dotenv.config();
 // Initialize Express app
@@ -22,7 +24,8 @@ app.use(checkDBConnection);
 
 // Route handling (after ensuring the database is connected)
 app.use('/', publicRoutes);
-app.use('/blog', privateRoutes);
+app.use('/blog', auth, privateRoutes);
+
 
 // app.get('/', (req, res) => {
 //   res.send('Hello World!');
