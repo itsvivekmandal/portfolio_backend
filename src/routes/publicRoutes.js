@@ -10,7 +10,7 @@ router.post('/login', login);
 // Route to fetch details of all the users
 router.get('/portfolio', portfolioData);
 // Route to send mail
-router.get('/send', sendMail);
+router.post('/send_email', sendMail);
 
 // export the router
 module.exports = router;

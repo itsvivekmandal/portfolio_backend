@@ -2,11 +2,13 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-SECRETE_KEY = process.env.SECRETE_KEY;
-REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
-ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN;
-REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN;
+const SECRETE_KEY = process.env.SECRETE_KEY;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+const ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN;
+const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN;
 
 /**
  * This function used to signup the user
@@ -84,7 +86,25 @@ const portfolioData = async(request, response) => {
  * @author Vivek Mandal <vivek248.vm@gmail.com>
  */
 const sendMail = async(request, response) => {
-  response.json({"message": "mail sent!"});
+  const {message} = request.body;
+  if(message === '' || message === undefined || message === null) {
+    return response.status(400).json({message: 'Empty message!'});
+  }
+
+  sgMail
+  .send({
+    to: 'itsvivekmandal@gmail.com',
+    from: 'Vivek Mandal<vivek248.vm@gmail.com>',
+    subject: 'Portfolio Mail',
+    text: message,
+  })
+  .then(() => {
+    return response.json({message: "Mail sent successfully."});
+  })
+  .catch((error) => {
+    return response.status(400).json({message: `Failed to send mail- ${error}`});
+  });
+
 };
 
 module.exports = {signUp, login, portfolioData, sendMail};

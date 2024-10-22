@@ -9,3 +9,5 @@
 2. Public route will be open public
 3. Private route have user authentication check using middleware
 4. installed jsonwebtoken(for authentication) and bcryptjs(for password hasing)
+
+sendgrid = H9K7LVJ4P4LHNQDEF5YHRD16
