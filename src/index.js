@@ -6,13 +6,14 @@ const privateRoutes = require('../src/routes/privateRoutes');
 const connectDB = require('../src/config/db');
 const {checkDBConnection} = require('../src/middleware/dbConnectionCheck');
 const auth = require('../src/middleware/auth');
+const cors = require('cors');
 
 // Configure the env file
 dotenv.config();
 // Initialize Express app
 const app = express();
 const port = process.env.PORT || 9000;
-
+app.use(cors());
 // Middleware to parse incoming JSON
 app.use(express.json());
 

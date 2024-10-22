@@ -102,7 +102,7 @@ const sendMail = async(request, response) => {
     return response.json({message: "Mail sent successfully."});
   })
   .catch((error) => {
-    return response.status(400).json({message: `Failed to send mail- ${error}`});
+    return response.status(400).json({message: 'Failed to send mail.'});
   });
 
 };
