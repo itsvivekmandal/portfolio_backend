@@ -4,7 +4,7 @@ const portfolioDetails = async(req, res) => {
 
   let progressInfo = await progress();
   
-  res.json({message: progressInfo});
+  res.json({progressInfo: progressInfo});
 };
 
 
