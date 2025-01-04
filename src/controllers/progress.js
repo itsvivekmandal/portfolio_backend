@@ -35,14 +35,10 @@ const progress = async() => {
   let commitData = {'xAxis': [], 'series': []};
   Object.keys(progressData).forEach(year => {
     let years = year.substring(2);
-    commitData.xAxis.push(`Q1-${years}`);
-    commitData.series.push(progressData[year].Q1);
-    commitData.xAxis.push(`Q2-${years}`);
-    commitData.series.push(progressData[year].Q2);
-    commitData.xAxis.push(`Q3-${years}`);
-    commitData.series.push(progressData[year].Q3);
-    commitData.xAxis.push(`Q4-${years}`);
-    commitData.series.push(progressData[year].Q4);
+    Object.keys(progressData[year]).forEach(quater => {
+      commitData.xAxis.push(`${quater}-${years}`);
+      commitData.series.push(progressData[year][quater]);
+    });
   });
 
   return commitData;
@@ -52,16 +48,38 @@ const progress = async() => {
 const createDateRange = (year) => {
   let dateRange = {};
   const currentYear = new Date().getFullYear();
+  let currentMonth = new Date().getMonth();
   
   while(year <= currentYear) {
-    dateRange[year] = {
-      // [`${year}_H1`]: 0,
-      // [`${year}_H2`]: 0
-      'Q1': 0,
-      'Q2': 0,
-      'Q3': 0,
-      'Q4': 0
+    if(year === currentYear && currentMonth < 10) {
+      if(currentMonth < 4) {
+        dateRange[year] = {
+          'Q1': 0
+        }
+      } else if(currentMonth < 7) {
+        dateRange[year] = {
+          'Q1': 0,
+          'Q2': 0
+        }
+      } else{
+        dateRange[year] = {
+          'Q1': 0,
+          'Q2': 0,
+          'Q3': 0
+        }
+      } 
+
+    } else {
+      dateRange[year] = {
+        // [`${year}_H1`]: 0,
+        // [`${year}_H2`]: 0
+        'Q1': 0,
+        'Q2': 0,
+        'Q3': 0,
+        'Q4': 0
+      }
     }
+
     year++;
   }
 
