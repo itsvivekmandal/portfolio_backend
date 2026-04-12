@@ -13,15 +13,15 @@ dotenv.config();
 // Initialize Express app
 const app = express();
 const port = process.env.PORT || 9000;
-app.use(cors());
+// app.use(cors());
 // Middleware to parse incoming JSON
 app.use(express.json());
 
 // MongoDB connection
-connectDB();
+// connectDB();
 
 // Use the connection check middleware globally
-app.use(checkDBConnection);
+// app.use(checkDBConnection);
 
 // Route handling (after ensuring the database is connected)
 app.use('/', publicRoutes);

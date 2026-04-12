@@ -1,4 +1,6 @@
 require('dotenv').config();
+
+const progressData = require('./progress');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
@@ -76,8 +78,10 @@ const login = async(request, response) => {
  * @return It will return an object
  * @author Vivek Mandal <vivek248.vm@gmail.com>
  */
-const portfolioData = async(request, response) => {
-  response.json({"message": "portfolio invoked!"});
+const progress = async(request, response) => {
+    let progressInfo = await progressData();
+  
+    return response.json({progressInfo: progressInfo});
 };
 
 /**
@@ -107,6 +111,6 @@ const sendMail = async(request, response) => {
 
 };
 
-module.exports = {signUp, login, portfolioData, sendMail};
+module.exports = {signUp, login, progress, sendMail};
 
 

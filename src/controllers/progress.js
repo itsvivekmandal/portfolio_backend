@@ -1,126 +1,119 @@
-const axios = require("axios")
+const axios = require("axios");
+const { json } = require("express/lib/response");
 require('dotenv').config();
 
 const token = process.env.GIT_TOKEN;
 
 const progress = async() => {
-  // Get profile
-  const githubProfile = await axios.get('https://api.github.com/users/itsvivekmandal', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'X-GitHub-Api-Version': '2022-11-28'
-      }
-    });
+    // Create Date Range
+    const dateRange = await createDateRange();
+    // Prepare Data
+    const data = await prepareData(dateRange);
 
-  let date = githubProfile.data?.created_at;
-  date = new Date(date);
-  const startYear = date.getFullYear();
-  // Create Date Range
-  const dateRange = createDateRange(startYear);
-  // Get repo list
-  const repoData = await axios.get('https://api.github.com/users/itsvivekmandal/repos', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'X-GitHub-Api-Version': '2022-11-28'
-      }
-    });
-
-  let repoList = [];
-  repoData.data.forEach(repo => {
-    repoList.push(repo.name);
-  });
-  // let repoList = ['portfolio'];
-  const progressData = await getCommitCount(repoList, dateRange);
-
-  let commitData = {'xAxis': [], 'series': []};
-  Object.keys(progressData).forEach(year => {
-    let years = year.substring(2);
-    Object.keys(progressData[year]).forEach(quater => {
-      commitData.xAxis.push(`${quater}-${years}`);
-      commitData.series.push(progressData[year][quater]);
-    });
-  });
-
-  return commitData;
-
+    return data;
 };
 
-const createDateRange = (year) => {
-  let dateRange = {};
-  const currentYear = new Date().getFullYear();
-  let currentMonth = new Date().getMonth();
-  
-  while(year <= currentYear) {
-    if(year === currentYear && currentMonth < 10) {
-      if(currentMonth < 4) {
-        dateRange[year] = {
-          'Q1': 0
-        }
-      } else if(currentMonth < 7) {
-        dateRange[year] = {
-          'Q1': 0,
-          'Q2': 0
-        }
-      } else{
-        dateRange[year] = {
-          'Q1': 0,
-          'Q2': 0,
-          'Q3': 0
-        }
-      } 
+const createDateRange = async() => {
+    let dateRange = {};
 
-    } else {
-      dateRange[year] = {
-        // [`${year}_H1`]: 0,
-        // [`${year}_H2`]: 0
-        'Q1': 0,
-        'Q2': 0,
-        'Q3': 0,
-        'Q4': 0
-      }
+    const date = await getStartDate();
+
+    if(!date) return dateRange;
+    
+    let startDate = new Date(date);
+    const endDate = new Date();
+    
+    
+    while (startDate <= endDate) {
+        // convert to YYYY-MM-DD
+        const formatted = startDate.toISOString().split('T')[0];
+        
+        dateRange[formatted] = 0;
+        // move to next day
+        startDate.setDate(startDate.getDate() + 1);
     }
 
-    year++;
-  }
+    return dateRange;
+};
 
-  return dateRange;
+const prepareData = async(dateRange) => {
+    let repoList = [];
+    const repository = await getRepository();
+
+    if(!repository) return [];
+
+    repository.forEach(repo => {
+        repoList.push(repo.name);
+    });
+
+    const result = await getCommitCount(repoList, dateRange); 
+
+    return result ?? [];
+};
+
+const getStartDate = async () => {
+    try {
+        const res = await axios.get('https://api.github.com/users/itsvivekmandal',
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-GitHub-Api-Version': '2022-11-28',
+                },
+            }
+        );
+
+        return res?.data?.created_at ?? null;
+
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+};
+
+const getRepository = async() => {
+    try {        
+        const repoData = await axios.get('https://api.github.com/users/itsvivekmandal/repos', 
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            }
+        );
+        return repoData?.data ?? [];
+    } catch (error) {
+        console.error(error);
+        return [];   
+    }
 };
 
 const getCommitCount = async(repoList, dateRange) => {
-  const promises = repoList.map(async (repo) => {
-    try {
-      const commits = await axios(`https://api.github.com/repos/itsvivekmandal/${repo}/commits`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-GitHub-Api-Version': '2022-11-28'
+    const promises = repoList.map(async (repo) => {
+        try {
+            const commits = await axios(`https://api.github.com/repos/itsvivekmandal/${repo}/commits`, {
+                headers: {
+                'Authorization': `Bearer ${token}`,
+                'X-GitHub-Api-Version': '2022-11-28'
+                }
+            });
+            return commits?.data;
+        } catch (error) {
+            return null;
         }
-      });
-      return commits.data;
-    } catch (error) {
-      return null;
-    }
-  });
-
-  const allCommits = await Promise.all(promises);
-  const commits = allCommits.filter(Boolean);
-
-  let data = [];
-  commits.forEach(repo => {
-    repo.forEach(commit => {
-      let date = new Date(commit?.commit?.committer?.date);
-      let year = date.getFullYear();
-      let month = date.getMonth();
-
-      if(month < 3) dateRange[year].Q1 += 1;
-      else if (month > 2 && month < 7) dateRange[year].Q2 += 1;
-      else if (month > 6 && month < 10) dateRange[year].Q3 += 1;
-      else dateRange[year].Q4 += 1;
     });
-  });
+
+    const allCommits = await Promise.all(promises);
+    const commits = allCommits.filter(Boolean);
+
+    commits.forEach(repo => {
+        repo.forEach(commit => {
+            let date = new Date(commit?.commit?.committer?.date).toISOString().split('T')[0];;
+            dateRange[date] += 1;
+        });
+    });
 
 
   return dateRange;
 };
-
 
 module.exports = progress;
