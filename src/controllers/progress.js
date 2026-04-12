@@ -13,24 +13,53 @@ const progress = async() => {
     return data;
 };
 
-const createDateRange = async() => {
+// const createDateRange = async() => {
+//     let dateRange = {};
+
+//     const date = await getStartDate();
+
+//     if(!date) return dateRange;
+    
+//     let startDate = new Date(date);
+//     const endDate = new Date();
+    
+    
+//     while (startDate <= endDate) {
+//         // convert to YYYY-MM-DD
+//         // const formatted = startDate.toISOString().split('T')[0];
+//         const formatted = startDate.toISOString().slice(0, 7);
+        
+//         dateRange[formatted] = 0;
+//         // move to next day
+//         // startDate.setDate(startDate.getDate() + 1);
+//         startDate.setMonth(startDate.getMonth() + 3);
+//     }
+
+//     return dateRange;
+// };
+
+const createDateRange = async () => {
     let dateRange = {};
 
     const date = await getStartDate();
+    if (!date) return dateRange;
 
-    if(!date) return dateRange;
-    
     let startDate = new Date(date);
     const endDate = new Date();
-    
-    
+
     while (startDate <= endDate) {
-        // convert to YYYY-MM-DD
-        const formatted = startDate.toISOString().split('T')[0];
-        
-        dateRange[formatted] = 0;
-        // move to next day
-        startDate.setDate(startDate.getDate() + 1);
+        const year = startDate.getFullYear();
+        const half  = Math.ceil((startDate.getMonth() + 1) / 6);
+
+        const key = `${year}-H${half }`;
+
+        // avoid duplicates (important)
+        if (!dateRange[key]) {
+            dateRange[key] = 0;
+        }
+
+        // move to next half 
+        startDate.setMonth(startDate.getMonth() + 6);
     }
 
     return dateRange;
@@ -46,9 +75,21 @@ const prepareData = async(dateRange) => {
         repoList.push(repo.name);
     });
 
-    const result = await getCommitCount(repoList, dateRange); 
+    const data = await getCommitCount(repoList, dateRange);
 
-    return result ?? [];
+    const output = Object.entries(data).map(([date, value]) => ({
+        x: date,
+        y: value
+    }));
+
+    const result =  [
+        {
+            id: "progress",
+            data: output ?? [],
+        },
+    ];
+
+    return result;
 };
 
 const getStartDate = async () => {
@@ -107,8 +148,13 @@ const getCommitCount = async(repoList, dateRange) => {
 
     commits.forEach(repo => {
         repo.forEach(commit => {
-            let date = new Date(commit?.commit?.committer?.date).toISOString().split('T')[0];;
-            dateRange[date] += 1;
+            const date = new Date(commit?.commit?.committer?.date);
+            // let date = new Date(commit?.commit?.committer?.date).toISOString().slice(0, 7);
+            const year = new Date(date).getFullYear();
+            const quarter = Math.ceil((new Date(date).getMonth() + 1) / 6);
+
+            const key = `${year}-H${quarter}`;
+            dateRange[key] += 1;
         });
     });
 
