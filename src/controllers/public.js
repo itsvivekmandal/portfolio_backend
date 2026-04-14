@@ -97,11 +97,11 @@ const sendMail = async(request, response) => {
     }
 
     // 1. Verify the token with Google
-    const response = await axios.post(
+    const res = await axios.post(
         `https://www.google.com/recaptcha/api/siteverify?secret=${RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`
     );
 
-    const { success, score } = response.data;
+    const { success, score } = res.data;
 
     // 2. Check if verification passed and score is good (usually > 0.5)
     if (success && score >= 0.5) {
